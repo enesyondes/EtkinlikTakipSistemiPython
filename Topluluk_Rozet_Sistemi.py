@@ -93,9 +93,51 @@ class Uygulama:
         self.arama_btn = tk.Button(self.pencere, text="Ara", command=self.arama_yap, font=("Arial", 16))
         self.arama_btn.pack(pady=10)
         
+        self.rozet_arttir_btn = tk.Button(self.pencere, text="Seçilen Üyenin Rozetini Arttır", command=self.rozet_arttir, font=("Arial", 16))
+        self.rozet_arttir_btn.pack(pady=5)
+
+        self.rozet_azalt_btn = tk.Button(self.pencere, text="Seçilen Üyenin Rozetini Azalt", command=self.rozet_azalt, font=("Arial", 16))
+        self.rozet_azalt_btn.pack(pady=5)
+
         sil_btn = tk.Button(self.pencere, text="Seçilen Üyeyi Sil", command=self.sil_uye, font=("Arial", 16))
         sil_btn.pack(pady=5)  # Ana Sayfa butonunun altına
 
+        self.guncelle_liste()
+
+    def rozet_arttir(self):
+        secili_uye = self.siralama_listesi.get(tk.ACTIVE)
+        tam_isim = secili_uye.split('-')[0].split('.')[-1][1:].split()
+        
+        isim = " ".join(tam_isim[:-1])
+        soyisim =tam_isim[-1]
+
+        ##isim ve soyisimi kullanarak sql_query ile uyeler tablosunda rozet arttirma islemi yapilir
+        sql_query = """
+            UPDATE uyeler
+            SET rozet = rozet + 1
+            WHERE (isim = ?)
+            AND (soyisim = ?);
+        """
+        self.cursor.execute(sql_query, (isim,soyisim))
+        self.baglanti.commit()
+        self.guncelle_liste()
+    
+    def rozet_azalt(self):
+        secili_uye = self.siralama_listesi.get(tk.ACTIVE)
+        tam_isim = secili_uye.split('-')[0].split('.')[-1][1:].split()
+        
+        isim = " ".join(tam_isim[:-1])
+        soyisim =tam_isim[-1]
+
+        ##isim ve soyisimi kullanarak sql_query ile uyeler tablosunda rozet arttirma islemi yapilir
+        sql_query = """
+            UPDATE uyeler
+            SET rozet = rozet - 1
+            WHERE (isim = ?)
+            AND (soyisim = ?);
+        """
+        self.cursor.execute(sql_query, (isim,soyisim))
+        self.baglanti.commit()
         self.guncelle_liste()
 
     def sil_uye(self):
@@ -182,7 +224,7 @@ class UyeEklemeFormu:
         self.sinif_label = tk.Label(self.pencere, text="Sınıf:", font=("Arial", 18))
         self.sinif_entry = tk.Entry(self.pencere, font=("Arial", 18))
         self.kaydet_btn = tk.Button(self.pencere, text="Kaydet", command=self.uye_kaydet, font=("Arial", 18), width=20)
-
+        
         self.isim_label.pack()
         self.isim_entry.pack()
         self.soyisim_label.pack()
@@ -237,6 +279,8 @@ class UyeSilmeFormu:
         self.bilgi_text = tk.Text(self.pencere, height=5, width=40, state="disabled", font=("Arial", 14))
 
         self.sil_btn = tk.Button(self.pencere, text="Üye Sil", command=self.uye_sil, font=("Arial", 18), width=20)
+        self.rozet_arttir_btn = tk.Button(self.pencere, text="Rozet Seviyesi Arttır", command=self.rozet_arttir, font=("Arial", 18), width=20)
+        self.rozet_azalt_btn = tk.Button(self.pencere, text="Rozet Seviyesi Azalt", command=self.rozet_azalt, font=("Arial", 18), width=20)
 
         self.isim_label.pack()
         self.isim_entry.pack()
@@ -246,6 +290,8 @@ class UyeSilmeFormu:
         self.bilgi_label.pack()
         self.bilgi_text.pack()
         self.sil_btn.pack()
+        self.rozet_arttir_btn.pack()
+        self.rozet_azalt_btn.pack()
 
     def uye_ara(self):
         isim = self.isim_entry.get()
@@ -275,6 +321,11 @@ class UyeSilmeFormu:
         self.baglanti.commit()
         self.pencere.title("Üye Silindi")
 
+    def rozet_arttir(self):
+        return
+    
+    def rozet_azalt(self):
+        return
 class RozetIslemleriSayfasi:
     def __init__(self, pencere, baglanti, cursor):
         self.pencere = pencere
@@ -328,4 +379,7 @@ class RozetIslemleriSayfasi:
 if __name__ == "__main__":
     pencere = tk.Tk()
     uygulama = Uygulama(pencere)
+    pencere.geometry("700x700")
+    # Pencereyi resizable (yeniden boyutlandırılabilir) yapmayın
+    pencere.resizable(False, False)
     pencere.mainloop()
