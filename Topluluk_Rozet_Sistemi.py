@@ -32,51 +32,18 @@ class Uygulama:
         baslik.pack(pady=20)
         
         # Üye İşlemleri, Rozet İşlemleri ve Rozet Sıralaması butonları
-        self.uye_islemleri_btn = tk.Button(self.pencere, text="Üye İşlemleri", command=self.uye_islemleri_sayfasi, font=("Arial", 18), width=20, background="green")
-        self.rozet_islemleri_btn = tk.Button(self.pencere, text="Rozet İşlemleri", command=self.rozet_islemleri_sayfasi, font=("Arial", 18), width=20, background="green")
-        self.rozet_sirala_btn = tk.Button(self.pencere, text="Rozet Sıralaması", command=self.rozet_siralama_sayfasi, font=("Arial", 18), width=20, background="yellow")
+        self.uye_ekle_btn = tk.Button(self.pencere, text="Üye Ekle", command=self.uye_ekle_sayfasi, font=("Arial", 18), width=20, background="green")
+        self.rozet_sirala_btn = tk.Button(self.pencere, text="Rozet İşlemleri", command=self.rozet_siralama_sayfasi, font=("Arial", 18), width=20, background="green")
         self.cikis_btn = tk.Button(self.pencere, text="Çıkış", command=self.pencere.quit, font=("Arial", 18), width=20, background="red")
         
-        self.uye_islemleri_btn.pack(pady=20)
-        self.rozet_islemleri_btn.pack(pady=20)
+        self.uye_ekle_btn.pack(pady=20)
         self.rozet_sirala_btn.pack(pady=20)
         self.cikis_btn.pack(pady=20)
 
     def temizle(self):
         for widget in self.pencere.winfo_children():
             widget.destroy()
-
-    def uye_islemleri_sayfasi(self):
-        self.temizle()
-        
-        # Üye İşlemleri sayfa başlık
-        baslik = tk.Label(self.pencere, text="Üye İşlemleri", font=("Arial", 24), fg="green")
-        baslik.pack(pady=10)
-        
-        # Geri Dön butonu
-        geri_btn = tk.Button(self.pencere, text="Ana Sayfa", command=self.ana_sayfa, font=("Arial", 14))
-        geri_btn.pack(anchor="nw", padx=10, pady=10)
-        
-        uye_ekle_btn = tk.Button(self.pencere, text="Üye Ekle", command=self.uye_ekle_sayfasi, font=("Arial", 18), width=20)
-        uye_sil_btn = tk.Button(self.pencere, text="Üye Sil", command=self.uye_sil_sayfasi, font=("Arial", 18), width=20)
-        
-        uye_ekle_btn.pack(pady=20)
-        uye_sil_btn.pack(pady=20)
-
-    def rozet_islemleri_sayfasi(self):
-        self.temizle()
-        
-        # Rozet İşlemleri sayfa başlık
-        baslik = tk.Label(self.pencere, text="Rozet İşlemleri", font=("Arial", 24), fg="black")
-        baslik.pack(pady=10)
-        
-        # Geri Dön butonu
-        geri_btn = tk.Button(self.pencere, text="Ana Sayfa", command=self.ana_sayfa, font=("Arial", 14))
-        geri_btn.pack(anchor="nw", padx=10, pady=10)
-        
-        rozet_sayfasi = RozetIslemleriSayfasi(self.pencere, self.baglanti, self.cursor)
-        rozet_sayfasi.olustur()
-
+            
     def uye_ekle_sayfasi(self):
         self.temizle()
         
@@ -85,7 +52,7 @@ class Uygulama:
         baslik.pack(pady=10)
         
         # Geri Dön butonu
-        geri_btn = tk.Button(self.pencere, text="Üye İşlemleri", command=self.uye_islemleri_sayfasi, font=("Arial", 14))
+        geri_btn = tk.Button(self.pencere, text="Ana Sayfa", command=self.ana_sayfa, font=("Arial", 14))
         geri_btn.pack(anchor="nw", padx=10, pady=10)
         
         uye_ekleme_formu = UyeEklemeFormu(self.pencere, self.baglanti, self.cursor)
@@ -122,25 +89,65 @@ class Uygulama:
         self.arama_isim_label.pack()
         self.arama_isim_entry = tk.Entry(self.pencere, font=("Arial", 16))
         self.arama_isim_entry.pack()
-        self.arama_soyisim_label = tk.Label(self.pencere, text="Soyisim:", font=("Arial", 16))
-        self.arama_soyisim_label.pack()
-        self.arama_soyisim_entry = tk.Entry(self.pencere, font=("Arial", 16))
-        self.arama_soyisim_entry.pack()
+
         self.arama_btn = tk.Button(self.pencere, text="Ara", command=self.arama_yap, font=("Arial", 16))
-        self.arama_btn.pack()
+        self.arama_btn.pack(pady=10)
+        
+        sil_btn = tk.Button(self.pencere, text="Seçilen Üyeyi Sil", command=self.sil_uye, font=("Arial", 16))
+        sil_btn.pack(pady=5)  # Ana Sayfa butonunun altına
 
         self.guncelle_liste()
 
-    def arama_yap(self):
-        isim = self.arama_isim_entry.get()
-        soyisim = self.arama_soyisim_entry.get()
+    def sil_uye(self):
+        secili_uye = self.siralama_listesi.get(tk.ACTIVE)
+        tam_isim = secili_uye.split('-')[0].split('.')[-1][1:].split()
+        
+        isim = " ".join(tam_isim[:-1])
+        soyisim =tam_isim[-1]
 
-        self.cursor.execute("SELECT isim, soyisim, rozet FROM uyeler WHERE isim = ? AND soyisim = ?", (isim, soyisim))
-        sonuc = self.cursor.fetchall()
+        ##isim ve soyisimi kullanarak sql_query ile uyeler tablosundan silme islemi yapilir
+        sql_query = """
+            DELETE FROM uyeler
+            WHERE (isim = ?)
+            AND (soyisim = ?);
+        """
+        self.cursor.execute(sql_query, (isim,soyisim))
+        self.baglanti.commit()
+        self.guncelle_liste()
+        return
+    def arama_yap(self):
+        tam_isim = (self.arama_isim_entry.get()).split()
+        
+        if len(tam_isim) == 0:
+            self.guncelle_liste()
+            return
+
+        isim = tam_isim[0]
+        soyisim = "" if len(tam_isim) == 1 else " ".join(tam_isim[1:])  # Yalnizca isim olma durumunda soyisim empty string olarak birakilir
+
+        if soyisim == "":
+        
+            # soyisimin olmamasi durumunda yalnizca isim arayacak olan sql sorgusu
+            sql_query = """
+                SELECT isim, soyisim, rozet FROM uyeler
+                WHERE (isim LIKE ?)
+            """
+            self.cursor.execute(sql_query, ("%"+isim+"%",))
+        
+        else:
+            # isim ve soyisimi arayacak olan sql sorgusu
+            sql_query = """
+                SELECT isim, soyisim, rozet FROM uyeler
+                WHERE (isim LIKE ? OR soyisim LIKE ?);
+            """
+            
+            self.cursor.execute(sql_query, ("%"+isim+"%", "%"+soyisim+"%","%"+isim+"%","%"+soyisim+"%"))
+
+        results = self.cursor.fetchall()
         self.siralama_listesi.delete(0, tk.END)
 
-        if sonuc:
-            for sira, (isim, soyisim, rozet) in enumerate(sonuc, start=1):
+        if results:
+            for sira, (isim, soyisim, rozet) in enumerate(results, start=1):
                 self.siralama_listesi.insert(tk.END, f"{sira}. {isim} {soyisim} - Rozet: {rozet}")
         else:
             self.siralama_listesi.insert(tk.END, "Üye bulunamadı.")
@@ -206,7 +213,12 @@ class UyeEklemeFormu:
                                     (isim, soyisim, okul_no, sinif))
                 self.baglanti.commit()
                 self.pencere.title("Üye Kaydedildi")
-
+                
+                #uye olusturduktan sonra girdileri temizle
+                self.isim_entry.delete(0, tk.END)
+                self.soyisim_entry.delete(0, tk.END)
+                self.okul_no_entry.delete(0, tk.END)
+                self.sinif_entry.delete(0, tk.END)
 class UyeSilmeFormu:
     def __init__(self, pencere, baglanti, cursor):
         self.pencere = pencere
