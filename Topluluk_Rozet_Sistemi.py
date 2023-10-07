@@ -93,9 +93,51 @@ class Uygulama:
         self.arama_btn = tk.Button(self.pencere, text="Ara", command=self.arama_yap, font=("Arial", 16))
         self.arama_btn.pack(pady=10)
         
+        self.rozet_arttir_btn = tk.Button(self.pencere, text="Seçilen Üyenin Rozetini Arttır", command=self.rozet_arttir, font=("Arial", 16))
+        self.rozet_arttir_btn.pack(pady=5)
+
+        self.rozet_azalt_btn = tk.Button(self.pencere, text="Seçilen Üyenin Rozetini Azalt", command=self.rozet_azalt, font=("Arial", 16))
+        self.rozet_azalt_btn.pack(pady=5)
+
         sil_btn = tk.Button(self.pencere, text="Seçilen Üyeyi Sil", command=self.sil_uye, font=("Arial", 16))
         sil_btn.pack(pady=5)  # Ana Sayfa butonunun altına
 
+        self.guncelle_liste()
+
+    def rozet_arttir(self):
+        secili_uye = self.siralama_listesi.get(tk.ACTIVE)
+        tam_isim = secili_uye.split('-')[0].split('.')[-1][1:].split()
+        
+        isim = " ".join(tam_isim[:-1])
+        soyisim =tam_isim[-1]
+
+        ##isim ve soyisimi kullanarak sql_query ile uyeler tablosunda rozet arttirma islemi yapilir
+        sql_query = """
+            UPDATE uyeler
+            SET rozet = rozet + 1
+            WHERE (isim = ?)
+            AND (soyisim = ?);
+        """
+        self.cursor.execute(sql_query, (isim,soyisim))
+        self.baglanti.commit()
+        self.guncelle_liste()
+    
+    def rozet_azalt(self):
+        secili_uye = self.siralama_listesi.get(tk.ACTIVE)
+        tam_isim = secili_uye.split('-')[0].split('.')[-1][1:].split()
+        
+        isim = " ".join(tam_isim[:-1])
+        soyisim =tam_isim[-1]
+
+        ##isim ve soyisimi kullanarak sql_query ile uyeler tablosunda rozet arttirma islemi yapilir
+        sql_query = """
+            UPDATE uyeler
+            SET rozet = rozet - 1
+            WHERE (isim = ?)
+            AND (soyisim = ?);
+        """
+        self.cursor.execute(sql_query, (isim,soyisim))
+        self.baglanti.commit()
         self.guncelle_liste()
 
     def sil_uye(self):
@@ -182,7 +224,7 @@ class UyeEklemeFormu:
         self.sinif_label = tk.Label(self.pencere, text="Sınıf:", font=("Arial", 18))
         self.sinif_entry = tk.Entry(self.pencere, font=("Arial", 18))
         self.kaydet_btn = tk.Button(self.pencere, text="Kaydet", command=self.uye_kaydet, font=("Arial", 18), width=20)
-
+        
         self.isim_label.pack()
         self.isim_entry.pack()
         self.soyisim_label.pack()
@@ -219,113 +261,11 @@ class UyeEklemeFormu:
                 self.soyisim_entry.delete(0, tk.END)
                 self.okul_no_entry.delete(0, tk.END)
                 self.sinif_entry.delete(0, tk.END)
-class UyeSilmeFormu:
-    def __init__(self, pencere, baglanti, cursor):
-        self.pencere = pencere
-        self.baglanti = baglanti
-        self.cursor = cursor
-        self.olustur()
-
-    def olustur(self):
-        self.isim_label = tk.Label(self.pencere, text="İsim:", font=("Arial", 18))
-        self.isim_entry = tk.Entry(self.pencere, font=("Arial", 18))
-        self.soyisim_label = tk.Label(self.pencere, text="Soyisim:", font=("Arial", 18))
-        self.soyisim_entry = tk.Entry(self.pencere, font=("Arial", 18))
-        self.ara_btn = tk.Button(self.pencere, text="Ara", command=self.uye_ara, font=("Arial", 18), width=20)
-
-        self.bilgi_label = tk.Label(self.pencere, text="Üye Bilgileri:", font=("Arial", 18))
-        self.bilgi_text = tk.Text(self.pencere, height=5, width=40, state="disabled", font=("Arial", 14))
-
-        self.sil_btn = tk.Button(self.pencere, text="Üye Sil", command=self.uye_sil, font=("Arial", 18), width=20)
-
-        self.isim_label.pack()
-        self.isim_entry.pack()
-        self.soyisim_label.pack()
-        self.soyisim_entry.pack()
-        self.ara_btn.pack()
-        self.bilgi_label.pack()
-        self.bilgi_text.pack()
-        self.sil_btn.pack()
-
-    def uye_ara(self):
-        isim = self.isim_entry.get()
-        soyisim = self.soyisim_entry.get()
-
-        self.cursor.execute("SELECT * FROM uyeler WHERE isim = ? AND soyisim = ?", (isim, soyisim))
-        sonuc = self.cursor.fetchone()
-
-        if sonuc:
-            id, isim, soyisim, okul_numarasi, sinif, rozet = sonuc
-            bilgi = f"ID: {id}\nİsim: {isim}\nSoyisim: {soyisim}\nOkul Numarası: {okul_numarasi}\nSınıf: {sinif}\nRozet: {rozet}"
-            self.bilgi_text.config(state="normal")
-            self.bilgi_text.delete(1.0, "end")
-            self.bilgi_text.insert("insert", bilgi)
-            self.bilgi_text.config(state="disabled")
-        else:
-            self.bilgi_text.config(state="normal")
-            self.bilgi_text.delete(1.0, "end")
-            self.bilgi_text.insert("insert", "Üye bulunamadı.")
-            self.bilgi_text.config(state="disabled")
-
-    def uye_sil(self):
-        isim = self.isim_entry.get()
-        soyisim = self.soyisim_entry.get()
-
-        self.cursor.execute("DELETE FROM uyeler WHERE isim = ? AND soyisim = ?", (isim, soyisim))
-        self.baglanti.commit()
-        self.pencere.title("Üye Silindi")
-
-class RozetIslemleriSayfasi:
-    def __init__(self, pencere, baglanti, cursor):
-        self.pencere = pencere
-        self.baglanti = baglanti
-        self.cursor = cursor
-
-    def olustur(self):
-        self.okul_no_label = tk.Label(self.pencere, text="Okul Numarası:", font=("Arial", 18))
-        self.okul_no_kutusu = tk.Entry(self.pencere, font=("Arial", 18))
-        self.bilgi_goster_btn = tk.Button(self.pencere, text="Bilgi Göster", command=self.bilgi_goster, font=("Arial", 18), width=20)
-        self.rozet_artir_btn = tk.Button(self.pencere, text="Rozet Artır", command=self.rozet_artir, font=("Arial", 18), width=20)
-        self.rozet_azalt_btn = tk.Button(self.pencere, text="Rozet Azalt", command=self.rozet_azalt, font=("Arial", 18), width=20)
-        self.bilgi_label = tk.Label(self.pencere, text="", font=("Arial", 18))
-
-        self.okul_no_label.pack()
-        self.okul_no_kutusu.pack()
-        self.bilgi_goster_btn.pack()
-        self.rozet_artir_btn.pack()
-        self.rozet_azalt_btn.pack()
-        self.bilgi_label.pack()
-
-    def bilgi_goster(self):
-        okul_no = self.okul_no_kutusu.get()
-
-        self.cursor.execute("SELECT isim, soyisim, okul_no, sinif, rozet FROM uyeler WHERE okul_no = ?", (okul_no,))
-        sonuc = self.cursor.fetchone()
-
-        if sonuc:
-            isim, soyisim, okul_numarasi, sinif, rozet = sonuc
-            bilgi = f"İsim: {isim}\nSoyisim: {soyisim}\nOkul Numarası: {okul_numarasi}\nSınıf: {sinif}\nRozet: {rozet}"
-            self.bilgi_label.config(text=bilgi)
-        else:
-            self.bilgi_label.config(text="Kişi bulunamadı.")
-
-
-    def rozet_artir(self):
-        okul_no = self.okul_no_kutusu.get()
-
-        self.cursor.execute("UPDATE uyeler SET rozet = rozet + 1 WHERE okul_no = ?", (okul_no,))
-        self.baglanti.commit()
-        self.bilgi_goster()
-
-    def rozet_azalt(self):
-        okul_no = self.okul_no_kutusu.get()
-
-        self.cursor.execute("UPDATE uyeler SET rozet = rozet - 1 WHERE okul_no = ?", (okul_no,))
-        self.baglanti.commit()
-        self.bilgi_goster()
-
 
 if __name__ == "__main__":
     pencere = tk.Tk()
     uygulama = Uygulama(pencere)
+    pencere.geometry("700x700")
+    # Pencereyi resizable (yeniden boyutlandırılabilir) yapmayın
+    pencere.resizable(False, False)
     pencere.mainloop()
