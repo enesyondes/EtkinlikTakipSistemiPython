@@ -183,7 +183,7 @@ class Uygulama:
                 WHERE (isim LIKE ? OR soyisim LIKE ?);
             """
             
-            self.cursor.execute(sql_query, ("%"+isim+"%", "%"+soyisim+"%","%"+isim+"%","%"+soyisim+"%"))
+            self.cursor.execute(sql_query, ("%"+isim+"%", "%"+soyisim+"%"))
 
         results = self.cursor.fetchall()
         self.siralama_listesi.delete(0, tk.END)
